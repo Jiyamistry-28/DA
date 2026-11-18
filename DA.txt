@@ -1,0 +1,3152 @@
+---------------------------------------------------------------------------------------------------------------
+Bike-Sharing 
+---------------------------------------------------------------------------------------------------------------
+============================================================
+# 1. UPLOAD AND IMPORT DATASET
+# ============================================================
+
+from google.colab import files
+uploaded = files.upload()
+
+import pandas as pd
+
+# Read Excel file (day sheet)
+df = pd.read_excel("bike-sharing.xlsx", "day")
+
+# Display first 5 rows
+df.head()
+
+# Display first 10 rows from the end
+df.tail(10)
+
+# Display number of rows and columns
+df.shape
+
+# Display column names
+df.columns
+
+# Display dataset information
+df.info()
+
+# Display statistical summary
+df.describe()
+
+
+# ============================================================
+# 2. DESCRIPTIVE STATISTICS
+# ============================================================
+
+# Calculate mean, median, mode, variance and standard deviation
+cnt = df["cnt"]
+
+print("Mean:", cnt.mean())
+print("Median:", cnt.median())
+print("Mode:", cnt.mode()[0])
+print("Variance:", cnt.var())
+print("Standard Deviation:", cnt.std())
+
+
+# ============================================================
+# 3. CHECK MISSING VALUES
+# ============================================================
+
+# Count missing values in each column
+df.isnull().sum()
+
+# Calculate percentage of missing values
+missing = df.isnull().mean() * 100
+print(missing)
+
+# Check whether missing values exist
+if df.isnull().sum().sum() == 0:
+    print("No missing values")
+else:
+    print("Missing values exist")
+
+
+# ============================================================
+# 4. CHECK AND REMOVE DUPLICATES
+# ============================================================
+
+# Count duplicate rows
+df.duplicated().sum()
+
+# Remove duplicate rows
+df = df.drop_duplicates()
+
+
+# ============================================================
+# 5. CHECK UNIQUE VALUES AND DATA TYPES
+# ============================================================
+
+# Display unique values of season and month
+print(df["season"].unique())
+print(df["mnth"].unique())
+
+# Check date column data type
+print(df["dteday"].dtype)
+
+# Convert date column into datetime format
+df["dteday"] = pd.to_datetime(df["dteday"])
+
+
+# ============================================================
+# 6. SELECT REQUIRED COLUMNS
+# ============================================================
+
+# Select important columns for analysis
+selected_columns = [
+    "dteday", "season", "yr", "mnth", "weekday",
+    "workingday", "weathersit", "temp", "hum",
+    "windspeed", "cnt"
+]
+
+analysis_df = df[selected_columns].copy()
+
+# Display selected columns
+print(analysis_df.columns)
+
+
+# ============================================================
+# 7. DATA TRANSFORMATION
+# ============================================================
+
+# Convert year values into actual years
+analysis_df["year"] = analysis_df["yr"].map({
+    0: 2011,
+    1: 2012
+})
+
+# Convert month numbers into month names
+month_map = {
+    1: "JAN", 2: "FEB", 3: "MAR",
+    4: "APR", 5: "MAY", 6: "JUN",
+    7: "JUL", 8: "AUG", 9: "SEP",
+    10: "OCT", 11: "NOV", 12: "DEC"
+}
+
+analysis_df["month"] = analysis_df["mnth"].map(month_map)
+
+# Display unique years and months
+print(analysis_df["year"].unique())
+print(analysis_df["month"].unique())
+
+
+# ============================================================
+# 8. TOTAL AND AVERAGE BIKE DEMAND ANALYSIS
+# ============================================================
+
+# Calculate total bike demand
+total_demand = analysis_df["cnt"].sum()
+print("Total Bike Demand:", total_demand)
+
+# Calculate year-wise total demand
+year_demand = analysis_df.groupby("year")["cnt"].sum()
+print(year_demand)
+
+# Calculate year-wise average demand
+year_average = analysis_df.groupby("year")["cnt"].mean()
+print(year_average)
+
+# Calculate month-wise average demand
+month_average = analysis_df.groupby("month")["cnt"].mean()
+print(month_average)
+
+# Calculate season-wise average demand
+season_average = analysis_df.groupby("season")["cnt"].mean()
+print(season_average)
+
+# Calculate weather-wise average demand
+weather_average = analysis_df.groupby("weathersit")["cnt"].mean()
+print(weather_average)
+
+# Calculate working day-wise average demand
+working_average = analysis_df.groupby("workingday")["cnt"].mean()
+print(working_average)
+
+
+# ============================================================
+# 9. CASUAL AND REGISTERED USERS ANALYSIS
+# ============================================================
+
+# Calculate average casual and registered users
+print("Casual Average:", df["casual"].mean())
+print("Registered Average:", df["registered"].mean())
+
+# Calculate total casual and registered users
+print("Casual Total:", df["casual"].sum())
+print("Registered Total:", df["registered"].sum())
+
+
+# ============================================================
+# 10. YEAR-WISE AND MONTH-WISE ANALYSIS
+# ============================================================
+
+# Calculate average demand for each year and month
+result = analysis_df.groupby(["year", "month"])["cnt"].mean()
+print(result)
+
+
+# ============================================================
+# 11. FILTERING DATA - YEAR 2011
+# ============================================================
+
+# Calculate total bike demand in 2011
+total = analysis_df.loc[
+    analysis_df["year"] == 2011, "cnt"
+].sum()
+
+print("Total demand in 2011:", total)
+
+# Count total days in 2011
+days = analysis_df.loc[
+    analysis_df["year"] == 2011, "cnt"
+].count()
+
+print("Total Days:", days)
+
+# Calculate average demand in 2011
+avg = analysis_df.loc[
+    analysis_df["year"] == 2011, "cnt"
+].mean()
+
+print("Average Demand:", avg)
+
+
+# ============================================================
+# 12. FILTERING DATA - APRIL MONTH
+# ============================================================
+
+# Calculate total bike demand in April
+total = analysis_df.loc[
+    analysis_df["month"] == "APR", "cnt"
+].sum()
+
+print("April Total Demand:", total)
+
+# Count total days in April
+days = analysis_df.loc[
+    analysis_df["month"] == "APR", "cnt"
+].count()
+
+print("April Total Days:", days)
+
+# Calculate average bike demand in April
+avg = analysis_df.loc[
+    analysis_df["month"] == "APR", "cnt"
+].mean()
+
+print("April Average Demand:", avg)
+
+
+# ============================================================
+# 13. IMPORT MATPLOTLIB
+# ============================================================
+
+import matplotlib.pyplot as plt
+
+
+# ============================================================
+# 14. LINE PLOT - DAILY BIKE DEMAND IN 2011
+# ============================================================
+
+# Filter records for 2011
+df_2011 = analysis_df[analysis_df["year"] == 2011]
+
+plt.figure(figsize=(12, 5))
+
+# Create line plot
+plt.plot(df_2011["dteday"], df_2011["cnt"])
+
+plt.title("Daily Bike Demand in 2011")
+plt.xlabel("Date")
+plt.ylabel("Total Bikes Rented")
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 15. LINE PLOT - DAILY BIKE DEMAND IN APRIL
+# ============================================================
+
+# Filter April records
+april = analysis_df[analysis_df["month"] == "APR"]
+
+plt.figure(figsize=(12, 5))
+
+# Create line plot with markers
+plt.plot(april["dteday"], april["cnt"], marker="o")
+
+plt.title("Daily Bike Demand in April")
+plt.xlabel("Date")
+plt.ylabel("Total Bikes Rented")
+plt.xticks(rotation=45)
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 16. LINE PLOT - MONTHLY AVERAGE BIKE DEMAND
+# ============================================================
+
+# Arrange months in correct order
+month_order = [
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"
+]
+
+# Calculate monthly average and arrange month order
+monthly = analysis_df.groupby("month")["cnt"].mean().reindex(month_order)
+
+# Create line plot
+plt.plot(monthly.index, monthly.values, marker="o")
+
+plt.title("Monthly Average Bike Demand")
+plt.xlabel("Month")
+plt.ylabel("Average Bikes Rented")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 17. LINE PLOT - YEAR-WISE AVERAGE BIKE DEMAND
+# ============================================================
+
+# Calculate year-wise average
+yearly = analysis_df.groupby("year")["cnt"].mean()
+
+# Create line plot
+plt.plot(yearly.index, yearly.values, marker="o")
+
+plt.title("Year-wise Average Bike Demand")
+plt.xlabel("Year")
+plt.ylabel("Average Demand")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 18. LINE PLOT - SEASON-WISE AVERAGE BIKE DEMAND
+# ============================================================
+
+# Calculate season-wise average
+season = analysis_df.groupby("season")["cnt"].mean()
+
+# Create line plot
+plt.plot(season.index, season.values, marker="o")
+
+plt.title("Average Bike Demand by Season")
+plt.xlabel("Season")
+plt.ylabel("Average Demand")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 19. BAR PLOT - TOTAL BIKE DEMAND BY SEASON
+# ============================================================
+
+# Calculate total demand for each season
+analysis_df.groupby("season")["cnt"].sum().plot.bar()
+
+plt.title("Total Bike Demand by Season")
+plt.xlabel("Season")
+plt.ylabel("Total Demand")
+plt.show()
+
+
+# ============================================================
+# 20. BAR PLOT - AVERAGE BIKE DEMAND BY MONTH
+# ============================================================
+
+# Calculate average demand for each month
+analysis_df.groupby("mnth")["cnt"].mean().plot.bar()
+
+plt.title("Average Bike Demand by Month")
+plt.xlabel("Month")
+plt.ylabel("Average Demand")
+plt.show()
+
+
+# ============================================================
+# 21. BAR PLOT - CASUAL VS REGISTERED USERS
+# ============================================================
+
+# Compare total casual and registered users
+df[["casual", "registered"]].sum().plot.bar()
+
+plt.title("Casual vs Registered Users")
+plt.xlabel("User Type")
+plt.ylabel("Total Users")
+plt.show()
+
+
+# ============================================================
+# 22. BAR PLOT - BIKE DEMAND BY WEATHER
+# ============================================================
+
+# Calculate average demand for each weather condition
+analysis_df.groupby("weathersit")["cnt"].mean().plot.bar()
+
+plt.title("Bike Demand by Weather")
+plt.xlabel("Weather")
+plt.ylabel("Average Demand")
+plt.show()
+
+
+# ============================================================
+# 23. BAR PLOT - TOTAL BIKE DEMAND BY YEAR
+# ============================================================
+
+# Calculate total demand for each year
+analysis_df.groupby("year")["cnt"].sum().plot.bar()
+
+plt.title("Total Bike Demand by Year")
+plt.xlabel("Year")
+plt.ylabel("Total Demand")
+plt.show()
+
+
+# ============================================================
+# 24. SCATTER PLOT - TEMPERATURE VS BIKE DEMAND
+# ============================================================
+
+# Check relationship between temperature and demand
+plt.figure(figsize=(8, 5))
+
+plt.scatter(df["temp"], df["cnt"], alpha=0.4)
+
+plt.title("Temperature vs Bike Demand")
+plt.xlabel("Temperature")
+plt.ylabel("Total Demand")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 25. SCATTER PLOT - HUMIDITY VS BIKE DEMAND
+# ============================================================
+
+# Check relationship between humidity and demand
+plt.scatter(df["hum"], df["cnt"], alpha=0.4)
+
+plt.title("Humidity vs Bike Demand")
+plt.xlabel("Humidity")
+plt.ylabel("Total Demand")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 26. SCATTER PLOT - WIND SPEED VS BIKE DEMAND
+# ============================================================
+
+# Check relationship between wind speed and demand
+plt.scatter(df["windspeed"], df["cnt"], alpha=0.4)
+
+plt.title("Wind Speed vs Bike Demand")
+plt.xlabel("Wind Speed")
+plt.ylabel("Total Demand")
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 27. HISTOGRAM - BIKE DEMAND DISTRIBUTION
+# ============================================================
+
+# Display frequency distribution of bike demand
+plt.hist(df["cnt"], bins=20)
+
+plt.title("Bike Demand Distribution")
+plt.xlabel("Total Bikes Rented")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# ============================================================
+# 28. HISTOGRAM - TEMPERATURE DISTRIBUTION
+# ============================================================
+
+# Display frequency distribution of temperature
+plt.hist(df["temp"], bins=15)
+
+plt.title("Temperature Distribution")
+plt.xlabel("Temperature")
+plt.ylabel("Frequency")
+plt.show()
+
+
+# ============================================================
+# 29. PIE CHART - CASUAL VS REGISTERED USERS
+# ============================================================
+
+# Compare total casual and registered users
+df[["casual", "registered"]].sum().plot.pie()
+
+plt.title("Casual vs Registered Users")
+plt.ylabel("")
+plt.show()
+
+
+# ============================================================
+# 30. PIE CHART - BIKE DEMAND BY SEASON
+# ============================================================
+
+# Display percentage contribution of each season
+df.groupby("season")["cnt"].sum().plot.pie()
+
+plt.title("Bike Demand by Season")
+plt.ylabel("")
+plt.show()
+
+
+# ============================================================
+# 31. FIND MAXIMUM AND MINIMUM DEMAND MONTH
+# ============================================================
+
+# Calculate month-wise total demand
+monthly = df.groupby("mnth")["cnt"].sum()
+
+# Find month with maximum demand
+print("Maximum Demand Month:", monthly.idxmax())
+
+# Find month with minimum demand
+print("Minimum Demand Month:", monthly.idxmin())
+
+
+# ============================================================
+# 32. FIND SEASON WITH MAXIMUM AVERAGE DEMAND
+# ============================================================
+
+# Calculate season-wise average demand
+season = df.groupby("season")["cnt"].mean()
+
+# Find season with maximum demand
+print("Highest Demand Season:", season.idxmax())
+
+
+# ============================================================
+# 33. TOTAL DEMAND ON WORKING DAYS
+# ============================================================
+
+# workingday = 1 means working day
+print(
+    "Working Day Total Demand:",
+    df[df["workingday"] == 1]["cnt"].sum()
+)
+
+
+# ============================================================
+# 34. TOTAL DEMAND ON HOLIDAYS
+# ============================================================
+
+# holiday = 1 means holiday
+print(
+    "Holiday Total Demand:",
+    df[df["holiday"] == 1]["cnt"].sum()
+)
+
+
+# ============================================================
+# 35. AVERAGE DEMAND ON WORKING DAYS AND NON-WORKING DAYS
+# ============================================================
+
+# Compare average demand based on workingday
+print(df.groupby("workingday")["cnt"].mean())
+
+
+# ============================================================
+# 36. AVERAGE BIKE DEMAND IN 2012
+# ============================================================
+
+# Filter 2012 and calculate average demand
+print(
+    analysis_df[analysis_df["year"] == 2012]["cnt"].mean()
+)
+
+
+# ============================================================
+# 37. TOTAL CASUAL USERS IN 2011
+# ============================================================
+
+# yr = 0 represents 2011
+print(
+    df[df["yr"] == 0]["casual"].sum()
+)
+
+
+# ============================================================
+# 38. TOTAL REGISTERED USERS IN 2012
+# ============================================================
+
+# yr = 1 represents 2012
+print(
+    df[df["yr"] == 1]["registered"].sum()
+)
+
+
+# ============================================================
+# 39. SEASON-WISE AVERAGE TEMPERATURE
+# ============================================================
+
+# Calculate average temperature for each season
+print(df.groupby("season")["temp"].mean())
+
+
+# ============================================================
+# 40. SEASON-WISE AVERAGE HUMIDITY
+# ============================================================
+
+# Calculate average humidity for each season
+print(df.groupby("season")["hum"].mean())
+
+
+# ============================================================
+# 41. FILTER RECORDS WHERE TEMPERATURE IS GREATER THAN 0.5
+# ============================================================
+
+# Display rows having temperature above 0.5
+print(df[df["temp"] > 0.5])
+
+
+# ============================================================
+# 42. FILTER RECORDS WHERE BIKE DEMAND IS GREATER THAN 5000
+# ============================================================
+
+# Display rows having demand above 5000
+print(df[df["cnt"] > 5000])
+
+
+# ============================================================
+# 43. DISPLAY TOP 10 DAYS WITH HIGHEST BIKE DEMAND
+# ============================================================
+
+# Sort bike demand in descending order
+# Display first 10 records
+print(df.sort_values("cnt", ascending=False).head(10))
+
+
+# ============================================================
+# 44. FEATURE CREATION
+# ============================================================
+
+# Create new column by adding casual and registered users
+df["Total Users"] = df["casual"] + df["registered"]
+
+# Convert normalized temperature into Celsius
+df["Temperature Celsius"] = df["temp"] * 41
+
+# Display newly created columns
+print(df[["Total Users", "Temperature Celsius"]].head())
+
+
+# ============================================================
+# 45. CORRELATION - TEMPERATURE VS BIKE DEMAND
+# ============================================================
+
+# Calculate correlation between temperature and bike demand
+print("Temperature and Demand Correlation:",
+      df["temp"].corr(df["cnt"]))
+
+
+-----------------------------------------------------------------------------------------------------------------
+Set-3
+-----------------------------------------------------------------------------------------------------------------
+
+# ============================================================
+# 1. IMPORT LIBRARIES
+# ============================================================
+
+import pandas as pd
+from pandas import DataFrame, Series, isna, notna
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+# ============================================================
+# 2. UPLOAD AND READ DATASET
+# ============================================================
+
+# Upload Excel dataset
+from google.colab import files
+uploaded = files.upload()
+
+# Read Excel file
+df = pd.read_excel("adult.xlsx")
+
+
+# ============================================================
+# 3. DISPLAY DATASET
+# ============================================================
+
+# Display first 5 rows
+df.head()
+
+# Display last 10 rows
+df.tail(10)
+
+# Display number of rows and columns
+df.shape
+
+# Print total observations (rows) and variables (columns)
+print("Observations:", df.shape[0])
+print("Variables:", df.shape[1])
+
+
+# ============================================================
+# 4. DESCRIPTIVE STATISTICS
+# ============================================================
+
+# Calculate average age
+print("Average Age:", df["age"].mean())
+
+# Calculate average working hours per week
+print("Average Hours per Week:", df["hours-per-week"].mean())
+
+
+# ============================================================
+# 5. FREQUENCY DISTRIBUTION
+# ============================================================
+
+# Count people according to education
+print(df["education"].value_counts())
+
+# Count people according to occupation
+print(df["occupation"].value_counts())
+
+
+# ============================================================
+# 6. GROUPBY ANALYSIS
+# ============================================================
+
+# Calculate average working hours for each income class
+print(df.groupby("class")["hours-per-week"].mean())
+
+
+# ============================================================
+# 7. BAR PLOT - PEOPLE BY EDUCATION
+# ============================================================
+
+# Count people in each education category and create bar plot
+df["education"].value_counts().plot.bar()
+
+plt.title("Number of People by Education")
+plt.xlabel("Education")
+plt.ylabel("Number of People")
+plt.show()
+
+
+# ============================================================
+# 8. SCATTER PLOT - AGE VS HOURS PER WEEK
+# ============================================================
+
+# Show relationship between age and working hours
+plt.scatter(df["age"], df["hours-per-week"])
+
+plt.title("Age vs Hours per Week")
+plt.xlabel("Age")
+plt.ylabel("Hours per Week")
+plt.show()
+
+
+# ============================================================
+# 9. SCATTER PLOT WITH FIGURE SIZE AND GRID
+# ============================================================
+
+# Set figure size
+plt.figure(figsize=(10, 5))
+
+# Create scatter plot with transparency
+plt.scatter(df["age"], df["hours-per-week"], alpha=0.2)
+
+plt.title("Age vs Hours per Week")
+plt.xlabel("Age")
+plt.ylabel("Hours per Week")
+
+# Display grid
+plt.grid()
+plt.show()
+
+
+----------------------------------------------------------------------------------------------------------------
+Decision-Tree(Classification)
+----------------------------------------------------------------------------------------------------------------
+
+# ============================================================
+# 1. IMPORT LIBRARIES
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Import train-test split
+from sklearn.model_selection import train_test_split
+
+# Import missing value handling
+from sklearn.impute import SimpleImputer
+
+# Import categorical data encoding
+from sklearn.preprocessing import OneHotEncoder
+
+# Import preprocessing tools
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Import Decision Tree
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+
+# Import evaluation metrics
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report,
+    ConfusionMatrixDisplay
+)
+
+
+# ============================================================
+# 2. LOAD DATASET
+# ============================================================
+
+# Load built-in Titanic dataset
+df = sns.load_dataset("titanic")
+
+# Display first 5 rows
+df.head()
+
+
+# ============================================================
+# 3. DATASET INFORMATION
+# ============================================================
+
+# Display dataset shape
+print("Dataset shape:", df.shape)
+
+# Display column names
+print("\nColumn names:")
+print(df.columns.tolist())
+
+# Display data types
+print("\nData types:")
+print(df.dtypes)
+
+# Display missing values
+print("\nMissing values:")
+print(df.isnull().sum())
+
+# Count duplicate rows
+print("\nDuplicate rows:", df.duplicated().sum())
+
+# Display statistical summary
+print("\nStatistical summary:")
+print(df.describe())
+
+
+# ============================================================
+# 4. TARGET VARIABLE ANALYSIS
+# ============================================================
+
+# Count survived and not survived passengers
+print("\nSurvival counts:")
+print(df["survived"].value_counts())
+
+# Calculate survival percentages
+print("\nSurvival percentages:")
+print(df["survived"].value_counts(normalize=True) * 100)
+
+
+# ============================================================
+# 5. SELECT FEATURES AND TARGET
+# ============================================================
+
+# Select independent variables (input features)
+features = [
+    "pclass",
+    "sex",
+    "age",
+    "sibsp",
+    "parch",
+    "fare",
+    "embarked"
+]
+
+X = df[features]
+
+# Select dependent variable (target)
+y = df["survived"]
+
+
+# ============================================================
+# 6. IDENTIFY NUMERICAL AND CATEGORICAL FEATURES
+# ============================================================
+
+# Numerical columns
+numeric_features = [
+    "pclass",
+    "age",
+    "sibsp",
+    "parch",
+    "fare"
+]
+
+# Categorical columns
+categorical_features = [
+    "sex",
+    "embarked"
+]
+
+print("Numerical features:", numeric_features)
+print("Categorical features:", categorical_features)
+
+
+# ============================================================
+# 7. SPLIT DATASET INTO TRAINING AND TESTING DATA
+# ============================================================
+
+# 80% training data and 20% testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+
+print("Training data shape:", X_train.shape)
+print("Testing data shape:", X_test.shape)
+
+
+# ============================================================
+# 8. CREATE NUMERICAL PIPELINE
+# ============================================================
+
+# Replace missing numerical values with median
+numeric_pipeline = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="median"))
+    ]
+)
+
+
+# ============================================================
+# 9. CREATE CATEGORICAL PIPELINE
+# ============================================================
+
+# Replace missing categorical values with mode
+# Convert categorical values into numerical format
+categorical_pipeline = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown="ignore"))
+    ]
+)
+
+
+# ============================================================
+# 10. CREATE COLUMN TRANSFORMER
+# ============================================================
+
+# Apply numerical and categorical pipelines separately
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("numeric", numeric_pipeline, numeric_features),
+        ("categorical", categorical_pipeline, categorical_features)
+    ]
+)
+
+print("Preprocessing pipeline created successfully.")
+
+
+# ============================================================
+# 11. CREATE DECISION TREE CLASSIFIER
+# ============================================================
+
+# Create Decision Tree model
+decision_tree = DecisionTreeClassifier(
+    criterion="gini",
+    max_depth=4,
+    min_samples_leaf=10,
+    random_state=42
+)
+
+
+# ============================================================
+# 12. CREATE COMPLETE MODEL PIPELINE
+# ============================================================
+
+# Combine preprocessing and Decision Tree
+model = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", decision_tree)
+    ]
+)
+
+
+# ============================================================
+# 13. TRAIN THE MODEL
+# ============================================================
+
+# Train model using training data
+model.fit(X_train, y_train)
+
+print("Decision Tree model trained successfully.")
+
+
+# ============================================================
+# 14. MAKE PREDICTIONS
+# ============================================================
+
+# Predict survival using testing data
+y_pred = model.predict(X_test)
+
+# Calculate prediction probabilities
+y_probabilities = model.predict_proba(X_test)
+
+# Extract survival probability (class 1)
+survival_probability = y_probabilities[:, 1]
+
+
+# ============================================================
+# 15. CREATE PREDICTION RESULTS DATAFRAME
+# ============================================================
+
+# Compare actual and predicted values
+results = pd.DataFrame({
+    "Actual": y_test.values,
+    "Predicted": y_pred,
+    "Survival_Probability": survival_probability
+})
+
+print(results.head(10))
+
+
+# ============================================================
+# 16. ACTUAL SURVIVED VS PREDICTED SURVIVED
+# ============================================================
+
+# Select passengers who actually survived
+actualServived = results[results["Actual"] == 1]
+
+# Select correctly predicted survived passengers
+predictedSurvived = actualServived[
+    actualServived["Predicted"] == 1
+]
+
+# Display counts
+print(
+    f"Actual survived count: {len(actualServived)}"
+    f"\nPredicted survived count: {len(predictedSurvived)}"
+)
+
+# Calculate correctly identified survived percentage
+print(
+    f"Predicted survived accuracy: "
+    f"{len(predictedSurvived) / len(actualServived) * 100:.2f}%"
+)
+
+
+# ============================================================
+# 17. ACTUAL NOT SURVIVED VS PREDICTED NOT SURVIVED
+# ============================================================
+
+# Select passengers who actually did not survive
+actualNotServived = results[results["Actual"] == 0]
+
+# Select correctly predicted not survived passengers
+predictedNotSurvived = actualNotServived[
+    actualNotServived["Predicted"] == 0
+]
+
+# Display actual not survived count
+print(
+    f"Actual not survived count: {len(actualNotServived)}"
+)
+
+# Display correctly predicted not survived count
+print(
+    f"Predicted not survived count: {len(predictedNotSurvived)}"
+)
+
+# Calculate correctly identified not survived percentage
+print(
+    f"Correctly identified not-survived percentage: "
+    f"{len(predictedNotSurvived) / len(actualNotServived) * 100:.2f}%"
+)
+
+
+# ============================================================
+# 18. FIND INCORRECT PREDICTIONS
+# ============================================================
+
+# Select rows where actual and predicted values are different
+incorrectPred = results[
+    results["Actual"] != results["Predicted"]
+]
+
+# Display incorrect predictions
+print(incorrectPred)
+
+# Count incorrect predictions
+print("Total incorrect predictions:", len(incorrectPred))
+
+# Count actual survived passengers incorrectly predicted
+# as not survived
+aspns = len(
+    incorrectPred[incorrectPred["Actual"] == 1]
+)
+
+print("Actual survived but predicted not survived:", aspns)
+
+
+# ============================================================
+# 19. MODEL ACCURACY
+# ============================================================
+
+# Calculate overall accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+
+# ============================================================
+# 20. CLASSIFICATION REPORT
+# ============================================================
+
+# Display precision, recall, F1-score and support
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=["Did not Survive", "Survived"],
+    zero_division=0
+))
+
+
+# ============================================================
+# 21. CONFUSION MATRIX
+# ============================================================
+
+# Display confusion matrix
+ConfusionMatrixDisplay.from_predictions(
+    y_test,
+    y_pred,
+    display_labels=[
+        "Did Not Survive",
+        "Survived"
+    ],
+    cmap="Blues"
+)
+
+plt.title("Decision Tree - Confusion Matrix")
+
+plt.tight_layout()
+plt.show()
+
+
+# ============================================================
+# 22. VISUALIZE DECISION TREE
+# ============================================================
+
+# Get feature names after preprocessing
+feature_names = model.named_steps[
+    "preprocessor"
+].get_feature_names_out()
+
+# Set figure size
+plt.figure(figsize=(22, 12))
+
+# Draw decision tree
+plot_tree(
+    model.named_steps["classifier"],
+    feature_names=feature_names,
+    class_names=["Did Not Survive", "Survived"],
+    filled=True,
+    rounded=True,
+    fontsize=12
+)
+
+plt.title("Visualisation of the Trained Decision Tree")
+
+plt.tight_layout()
+plt.show()
+
+
+# ============================================================
+# 23. FEATURE IMPORTANCE
+# ============================================================
+
+# Get trained Decision Tree
+trained_tree = model.named_steps["classifier"]
+
+# Calculate feature importance
+importance_values = trained_tree.feature_importances_
+
+# Create DataFrame of feature importance
+importance_df = pd.DataFrame({
+    "Feature": feature_names,
+    "Importance": importance_values
+})
+
+# Sort features in descending order
+importance_df = importance_df.sort_values(
+    by="Importance",
+    ascending=False
+)
+
+print(importance_df)
+
+
+# ============================================================
+# 24. TOP 10 FEATURE IMPORTANCE BAR GRAPH
+# ============================================================
+
+# Select top 10 important features
+top_features = importance_df.head(10).sort_values(
+    by="Importance"
+)
+
+# Set figure size
+plt.figure(figsize=(10, 6))
+
+# Create horizontal bar plot
+plt.barh(
+    top_features["Feature"],
+    top_features["Importance"]
+)
+
+plt.xlabel("Importance")
+plt.ylabel("Feature")
+
+plt.title("Decision Tree - Top 10 Feature Importances")
+
+plt.tight_layout()
+plt.show()
+
+
+# ============================================================
+# 25. PREDICTION FOR A NEW PASSENGER
+# ============================================================
+
+# Create new passenger details
+new_passenger = pd.DataFrame({
+    "pclass": [1],
+    "sex": ["female"],
+    "age": [28],
+    "sibsp": [0],
+    "parch": [0],
+    "fare": [80.0],
+    "embarked": ["S"]
+})
+
+# Predict survival
+prediction = model.predict(new_passenger)[0]
+
+# Calculate survival probability
+probability = model.predict_proba(new_passenger)[0, 1]
+
+# Display prediction
+if prediction == 1:
+    print("Prediction: Survived")
+else:
+    print("Prediction: Did not survive")
+
+# Display survival probability
+print(
+    "Estimated survival probability:",
+    round(probability * 100, 2),
+    "%"
+)
+
+
+-----------------------------------------------------------------------------------------------------------------
+Logistic Regression
+-----------------------------------------------------------------------------------------------------------------
+
+# ============================================================
+# 1. IMPORT LIBRARIES
+# ============================================================
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Import train-test split
+from sklearn.model_selection import train_test_split
+
+# Import missing value handling
+from sklearn.impute import SimpleImputer
+
+# Import scaling and encoding
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OneHotEncoder
+
+# Import pipeline and column transformer
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+
+# Import Logistic Regression
+from sklearn.linear_model import LogisticRegression
+
+# Import evaluation metrics
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import RocCurveDisplay
+
+
+# ============================================================
+# 2. LOAD DATASET
+# ============================================================
+
+# Load Titanic dataset
+df = sns.load_dataset("titanic")
+
+# Display first 5 rows
+print(df.head())
+
+
+# ============================================================
+# 3. DATASET EXPLORATION
+# ============================================================
+
+# Check missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Count duplicate rows
+print("\nDuplicate Rows:")
+print(df.duplicated().sum())
+
+# Display duplicate records
+print("\nDuplicate Records:")
+print(df[df.duplicated()])
+
+# Display statistical summary
+print("\nStatistical Summary:")
+print(df.describe())
+
+
+# ============================================================
+# 4. TARGET VARIABLE ANALYSIS
+# ============================================================
+
+# Count survived and not survived passengers
+print("Survival Count:")
+print(df["survived"].value_counts())
+
+# Calculate survival percentage
+print("\nSurvival Percentage:")
+print(df["survived"].value_counts(normalize=True) * 100)
+
+
+# ============================================================
+# 5. SELECT INPUT FEATURES AND TARGET
+# ============================================================
+
+# Select independent variables
+features = [
+    "pclass",
+    "sex",
+    "age",
+    "sibsp",
+    "parch",
+    "fare",
+    "embarked"
+]
+
+X = df[features]
+
+# Select dependent variable
+y = df["survived"]
+
+# Display input features and target
+print("\nInput Features:", X.columns)
+print("\nTarget Column:", y.name)
+
+# Display shape of X and y
+print("\nX Shape:", X.shape)
+print("\ny Shape:", y.shape)
+
+
+# ============================================================
+# 6. IDENTIFY NUMERICAL AND CATEGORICAL FEATURES
+# ============================================================
+
+# Numerical columns
+numeric_features = [
+    "pclass",
+    "age",
+    "sibsp",
+    "parch",
+    "fare"
+]
+
+# Categorical columns
+categorical_feature = [
+    "sex",
+    "embarked"
+]
+
+
+# ============================================================
+# 7. SPLIT DATASET INTO TRAINING AND TESTING DATA
+# ============================================================
+
+# 80% training data and 20% testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+
+# Display training and testing shapes
+print("\nTraining Data Shape:", X_train.shape)
+print("\nTesting Data Shape:", X_test.shape)
+print("\nTraining Target Shape:", y_train.shape)
+print("\nTesting Target Shape:", y_test.shape)
+
+
+# ============================================================
+# 8. NUMERICAL PIPELINE
+# ============================================================
+
+# Create median imputer
+numeric_imputer = SimpleImputer(strategy="median")
+
+# Create standard scaler
+numeric_scaler = StandardScaler()
+
+# Combine imputation and scaling
+numeric_pipeline = Pipeline(
+    steps=[
+        ("imputer", numeric_imputer),
+        ("scaler", numeric_scaler)
+    ]
+)
+
+
+# ============================================================
+# 9. CATEGORICAL PIPELINE
+# ============================================================
+
+# Replace missing categorical values with mode
+categorical_imputer = SimpleImputer(
+    strategy="most_frequent"
+)
+
+# Convert categorical values into numerical format
+categorical_encoder = OneHotEncoder(
+    handle_unknown="ignore"
+)
+
+# Combine imputation and encoding
+categorical_pipeline = Pipeline(
+    steps=[
+        ("imputer", categorical_imputer),
+        ("encoder", categorical_encoder)
+    ]
+)
+
+
+# ============================================================
+# 10. CREATE COLUMN TRANSFORMER
+# ============================================================
+
+# Apply separate pipelines to numerical and categorical columns
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("numeric", numeric_pipeline, numeric_features),
+        ("categorical", categorical_pipeline, categorical_feature)
+    ]
+)
+
+
+# ============================================================
+# 11. CREATE LOGISTIC REGRESSION MODEL
+# ============================================================
+
+# Create Logistic Regression classifier
+logistic_model = LogisticRegression(
+    max_iter=1000
+)
+
+
+# ============================================================
+# 12. CREATE COMPLETE MODEL PIPELINE
+# ============================================================
+
+# Combine preprocessing and Logistic Regression
+model = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", logistic_model)
+    ]
+)
+
+
+# ============================================================
+# 13. TRAIN THE MODEL
+# ============================================================
+
+# Train model using training data
+model.fit(X_train, y_train)
+
+print("Logistic Regression model trained successfully.")
+
+
+# ============================================================
+# 14. MAKE PREDICTIONS
+# ============================================================
+
+# Predict survival using testing data
+y_pred = model.predict(X_test)
+
+# Calculate prediction probabilities
+y_probability = model.predict_proba(X_test)
+
+# Extract probability of positive class (survived = 1)
+y_probability_positive = y_probability[:, 1]
+
+
+# ============================================================
+# 15. DISPLAY ACTUAL AND PREDICTED VALUES
+# ============================================================
+
+# Display first 10 actual values
+print("\nActual Values:")
+print(y_test.iloc[:10].values)
+
+# Display first 10 predicted values
+print("\nPredicted Values:")
+print(y_pred[:10])
+
+# Display survival probabilities
+print("\nProbability of Survival:")
+print(y_probability_positive[:10])
+
+
+# ============================================================
+# 16. CREATE PREDICTION RESULTS DATAFRAME
+# ============================================================
+
+# Compare actual, predicted and probability values
+results = pd.DataFrame({
+    "Actual": y_test.values,
+    "Predicted": y_pred,
+    "Survival_probability": y_probability_positive
+})
+
+# Display first 10 results
+print(results.head(10))
+
+
+# ============================================================
+# 17. FIND INCORRECT PREDICTIONS
+# ============================================================
+
+# Count incorrect predictions
+print(
+    results[results["Actual"] != results["Predicted"]].count()
+)
+
+# Store incorrect predictions
+incorrect = results[
+    results["Actual"] != results["Predicted"]
+]
+
+# Display total incorrect predictions
+print("Incorrect predictions:", len(incorrect))
+
+# Display incorrect records
+print(incorrect)
+
+
+# ============================================================
+# 18. CALCULATE MODEL ACCURACY
+# ============================================================
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy)
+
+# Display accuracy in percentage
+print("Accuracy:", round(accuracy * 100, 2), "%")
+
+
+# ============================================================
+# 19. CONFUSION MATRIX
+# ============================================================
+
+# Calculate confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+print(cm)
+
+# Display confusion matrix
+ConfusionMatrixDisplay.from_predictions(
+    y_test,
+    y_pred,
+    display_labels=["Not Survived", "Survived"],
+    cmap="Blues"
+)
+
+plt.title("Logistic Regression - Confusion Matrix")
+plt.show()
+
+
+# ============================================================
+# 20. CLASSIFICATION REPORT
+# ============================================================
+
+# Display precision, recall, F1-score and support
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=["Not Survived", "Survived"]
+))
+
+
+# ============================================================
+# 21. ROC-AUC SCORE
+# ============================================================
+
+# Calculate ROC-AUC score using positive class probabilities
+roc_auc = roc_auc_score(y_test, y_probability_positive)
+
+print("ROC-AUC Score:", roc_auc)
+
+
+# ============================================================
+# 22. ROC CURVE
+# ============================================================
+
+# Display ROC curve
+RocCurveDisplay.from_predictions(
+    y_test,
+    y_probability_positive
+)
+
+plt.title("Logistic Regression - ROC Curve")
+plt.show()
+
+
+
+
+----------------------------------------------------------------------------------------------------------------
+Linear Regression
+----------------------------------------------------------------------------------------------------------------
+
+# ============================================================
+# 1. IMPORT LIBRARIES
+# ============================================================
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Import California Housing dataset
+from sklearn.datasets import fetch_california_housing
+
+# Import train-test split
+from sklearn.model_selection import train_test_split
+
+# Import missing value handling
+from sklearn.impute import SimpleImputer
+
+# Import feature scaling
+from sklearn.preprocessing import StandardScaler
+
+# Import Linear Regression
+from sklearn.linear_model import LinearRegression
+
+# Import evaluation metrics
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    r2_score
+)
+
+
+# ============================================================
+# 2. LOAD DATASET
+# ============================================================
+
+# Load California Housing dataset
+housing = fetch_california_housing(as_frame=True)
+
+# Convert dataset into DataFrame
+df = housing.frame
+
+# Display dataset shape
+print("Dataset Shape:", df.shape)
+
+# Display first 5 rows
+df.head()
+
+
+# ============================================================
+# 3. DATASET EXPLORATION
+# ============================================================
+
+# Display data types
+print("\nData Types:")
+print(df.dtypes)
+
+# Check missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Count duplicate rows
+print("\nDuplicate Rows:")
+print(df.duplicated().sum())
+
+# Display statistical summary
+print("\nStatistical Summary:")
+print(df.describe())
+
+
+# ============================================================
+# 4. CREATE DIRTY DATASET
+# ============================================================
+
+# Create a copy of original dataset
+df_dirty = df.copy()
+
+# Insert missing values manually
+df_dirty.loc[10, "MedInc"] = np.nan
+df_dirty.loc[20, "HouseAge"] = np.nan
+df_dirty.loc[30, "AveRooms"] = np.nan
+df_dirty.loc[40, "Population"] = np.nan
+
+# Check missing values after inserting
+print("\nMissing Values in Dirty Dataset:")
+print(df_dirty.isnull().sum())
+
+
+# ============================================================
+# 5. SELECT INPUT FEATURES AND TARGET
+# ============================================================
+
+# Select independent variables (input features)
+X = df_dirty[
+    [
+        "MedInc",
+        "HouseAge",
+        "AveRooms",
+        "AveBedrms",
+        "Population",
+        "AveOccup",
+        "Latitude",
+        "Longitude"
+    ]
+]
+
+# Select dependent variable (target)
+y = df_dirty["MedHouseVal"]
+
+# Display feature names
+print("\nInput Features:")
+print(X.columns)
+
+# Display target column
+print("\nTarget Column:")
+print(y.name)
+
+# Display shapes
+print("\nX Shape:", X.shape)
+print("Y Shape:", y.shape)
+
+
+# ============================================================
+# 6. SPLIT DATASET INTO TRAINING AND TESTING DATA
+# ============================================================
+
+# 80% training data and 20% testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42
+)
+
+# Display training and testing shapes
+print("\nTraining Data Shape:", X_train.shape)
+print("Testing Data Shape:", X_test.shape)
+print("Training Target Shape:", y_train.shape)
+print("Testing Target Shape:", y_test.shape)
+
+
+# ============================================================
+# 7. HANDLE MISSING VALUES
+# ============================================================
+
+# Replace missing values with median
+imputer = SimpleImputer(strategy="median")
+
+# Fit imputer on training data and transform it
+X_train_imputed = imputer.fit_transform(X_train)
+
+# Transform testing data using training median values
+X_test_imputed = imputer.transform(X_test)
+
+print("\nMissing values handled successfully.")
+
+
+# ============================================================
+# 8. FEATURE SCALING
+# ============================================================
+
+# Create StandardScaler object
+scaler = StandardScaler()
+
+# Fit scaler on training data and transform it
+X_train_scaled = scaler.fit_transform(X_train_imputed)
+
+# Transform testing data using training scaling parameters
+X_test_scaled = scaler.transform(X_test_imputed)
+
+print("Feature scaling completed successfully.")
+
+
+# ============================================================
+# 9. CREATE LINEAR REGRESSION MODEL
+# ============================================================
+
+# Create Linear Regression model
+model = LinearRegression()
+
+
+# ============================================================
+# 10. TRAIN THE MODEL
+# ============================================================
+
+# Train model using training data
+model.fit(X_train_scaled, y_train)
+
+print("Linear Regression model trained successfully.")
+
+
+# ============================================================
+# 11. DISPLAY INTERCEPT AND COEFFICIENTS
+# ============================================================
+
+# Display intercept (b0)
+print("\nIntercept (b0):")
+print(model.intercept_)
+
+# Display coefficients (b1, b2, b3...)
+print("\nCoefficients:")
+print(model.coef_)
+
+
+# ============================================================
+# 12. MAKE PREDICTIONS
+# ============================================================
+
+# Predict house values using testing data
+y_pred = model.predict(X_test_scaled)
+
+# Display predicted values
+print("\nPredicted Values:")
+print(y_pred)
+
+
+# ============================================================
+# 13. MODEL EVALUATION
+# ============================================================
+
+# Calculate Mean Absolute Error
+mae = mean_absolute_error(y_test, y_pred)
+
+# Calculate Mean Squared Error
+mse = mean_squared_error(y_test, y_pred)
+
+# Calculate Root Mean Squared Error
+rmse = np.sqrt(mse)
+
+# Calculate R2 Score
+r2 = r2_score(y_test, y_pred)
+
+# Display evaluation metrics
+print("\nMAE:", mae)
+print("MSE:", mse)
+print("RMSE:", rmse)
+print("R2 Score:", r2)
+
+
+# ============================================================
+# 14. SCATTER PLOT - ACTUAL VS PREDICTED VALUES
+# ============================================================
+
+# Compare actual and predicted house values
+plt.figure(figsize=(8, 5))
+
+plt.scatter(y_test, y_pred, alpha=0.5)
+
+plt.xlabel("Actual House Value")
+plt.ylabel("Predicted House Value")
+plt.title("Actual vs Predicted Values")
+
+plt.grid()
+plt.show()
+
+
+# ============================================================
+# 15. HISTOGRAM - HOUSE VALUE DISTRIBUTION
+# ============================================================
+
+# Display frequency distribution of house values
+plt.hist(df["MedHouseVal"], bins=20)
+
+plt.xlabel("House Value")
+plt.ylabel("Frequency")
+plt.title("Distribution of House Values")
+
+plt.show()
+
+
+# ============================================================
+# 16. CORRELATION HEATMAP
+# ============================================================
+
+# Display correlation between numerical features
+plt.figure(figsize=(10, 7))
+
+sns.heatmap(
+    df.corr(),
+    annot=True,
+    cmap="coolwarm"
+)
+
+plt.title("Correlation Heatmap")
+plt.show()
+
+
+
+----------------------------------------------------------------------------------------------------------------
+Random Forest
+----------------------------------------------------------------------------------------------------------------
+
+# 1. Import required libraries
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+from sklearn.ensemble import RandomForestClassifier
+
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report,
+    ConfusionMatrixDisplay
+)
+
+
+# 2. Load the Titanic dataset
+
+df = sns.load_dataset("titanic")
+
+print(df.head())
+
+
+# 3. Understand the dataset
+
+print("Dataset shape:", df.shape)
+
+print("\nColumn names:")
+print(df.columns.tolist())
+
+print("\nData types:")
+print(df.dtypes)
+
+print("\nMissing values:")
+print(df.isnull().sum())
+
+print("\nDuplicate rows:", df.duplicated().sum())
+
+print("\nStatistical summary:")
+print(df.describe())
+
+print("\nSurvival counts:")
+print(df["survived"].value_counts())
+
+print("\nSurvival percentages:")
+print(df["survived"].value_counts(normalize=True) * 100)
+
+
+# 4. Visualize target distribution
+
+sns.countplot(data=df, x="survived")
+plt.title("Titanic Survival Distribution")
+plt.xlabel("Survived")
+plt.ylabel("Number of Passengers")
+plt.show()
+
+
+# 5. Select input features (X) and target (y)
+
+features = [
+    "pclass",
+    "sex",
+    "age",
+    "sibsp",
+    "parch",
+    "fare",
+    "embarked"
+]
+
+X = df[features]
+y = df["survived"]
+
+print("Input features:")
+print(X.head())
+
+print("\nTarget values:")
+print(y.head())
+
+
+# 6. Identify numerical and categorical columns
+
+numeric_features = [
+    "pclass",
+    "age",
+    "sibsp",
+    "parch",
+    "fare"
+]
+
+categorical_features = [
+    "sex",
+    "embarked"
+]
+
+print("Numerical features:", numeric_features)
+print("Categorical features:", categorical_features)
+
+
+# 7. Divide data into training and testing sets
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+
+print("Training data shape:", X_train.shape)
+print("Testing data shape:", X_test.shape)
+
+print("Training target shape:", y_train.shape)
+print("Testing target shape:", y_test.shape)
+
+
+# 8. Handle missing values and encode categorical data
+
+# Numerical pipeline: Replace missing values with median
+
+numeric_pipeline = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="median"))
+    ]
+)
+
+# Categorical pipeline: Replace missing values with mode
+# Convert categorical values into numerical values
+
+categorical_pipeline = Pipeline(
+    steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown="ignore"))
+    ]
+)
+
+# Combine both pipelines
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("numeric", numeric_pipeline, numeric_features),
+        ("categorical", categorical_pipeline, categorical_features)
+    ]
+)
+
+print("Preprocessing pipeline created successfully.")
+
+
+# 9. Create Random Forest Classification model
+
+random_forest = RandomForestClassifier(
+    n_estimators=200,
+    criterion="gini",
+    max_depth=None,
+    min_samples_split=2,
+    min_samples_leaf=2,
+    max_features="sqrt",
+    bootstrap=True,
+    random_state=42
+)
+
+
+# 10. Create complete machine learning pipeline
+
+model = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", random_forest)
+    ]
+)
+
+
+# 11. Train the Random Forest model
+
+model.fit(X_train, y_train)
+
+print("Random Forest model trained successfully.")
+
+
+# 12. Make predictions on test data
+
+y_pred = model.predict(X_test)
+
+print("Predicted values:")
+print(y_pred[:20])
+
+
+# 13. Calculate accuracy
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Accuracy:", accuracy)
+print("Accuracy (%):", accuracy * 100)
+
+
+# 14. Calculate and display confusion matrix
+
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+
+# Visualize confusion matrix
+
+ConfusionMatrixDisplay.from_predictions(
+    y_test,
+    y_pred,
+    display_labels=["Did Not Survive", "Survived"]
+)
+
+plt.title("Random Forest Confusion Matrix")
+plt.show()
+
+
+# 15. Display classification report
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=[
+            "Did Not Survive",
+            "Survived"
+        ],
+        zero_division=0
+    )
+)
+
+
+# 16. Calculate feature importance
+
+trained_forest = model.named_steps["classifier"]
+
+trained_preprocessor = model.named_steps["preprocessor"]
+
+# Get names of processed features
+
+feature_names = trained_preprocessor.get_feature_names_out()
+
+# Get importance values
+
+importance_values = trained_forest.feature_importances_
+
+# Create DataFrame
+
+importance_df = pd.DataFrame({
+    "Feature": feature_names,
+    "Importance": importance_values
+})
+
+# Sort features by importance
+
+importance_df = importance_df.sort_values(
+    by="Importance",
+    ascending=False
+)
+
+print("Feature Importance:")
+print(importance_df)
+
+
+# 17. Visualize feature importance
+
+plt.figure(figsize=(10, 6))
+
+plt.barh(
+    importance_df["Feature"],
+    importance_df["Importance"]
+)
+
+plt.xlabel("Importance")
+plt.ylabel("Feature")
+plt.title("Random Forest Feature Importance")
+
+plt.gca().invert_yaxis()
+
+plt.show()
+
+
+# 18. Predict survival for a new passenger
+
+new_passenger = pd.DataFrame({
+    "pclass": [3],
+    "sex": ["male"],
+    "age": [25],
+    "sibsp": [0],
+    "parch": [0],
+    "fare": [7.25],
+    "embarked": ["S"]
+})
+
+# Predict class
+
+prediction = model.predict(new_passenger)
+
+# Predict probabilities
+
+probability = model.predict_proba(new_passenger)
+
+print("Prediction:", prediction[0])
+
+print("Probability of Did Not Survive:", probability[0][0])
+
+print("Probability of Survived:", probability[0][1])
+
+
+
+
+----------------------------------------------------------------------------------------------------------------
+Matplot Graph
+----------------------------------------------------------------------------------------------------------------
+import matplotlib.pyplot as plt # for drawing the graph
+from pandas import Series,DataFrame,isna,notna  #for creating the dataframe
+
+students = DataFrame({
+    "Name" : ["Jay", "Karan", "Dipa", "Jinal", "Krupesh", "Monu"],
+    "Id" : [1,2,3,4,5,6],
+    "Gender" : ("Male", "Male", "Female", "Female", "Male", "Male"),
+    "DA" : (76,89,76,54,38,89),
+    "Project" : (56,78,93,78,76,90),
+    "ADBMS" : (78,87,56,88,64,89),
+    "Course" : ("MCA", "M.sc.IT", "MCA", "M.sc.IT", "M.sc.IT", "M.sc.IT")
+})
+
+students["Total"] = students.loc[:,["DA","Project","ADBMS"]].sum(axis=1)
+students
+
+x = students["Name"]
+y = students["Total"]
+plt.bar(x,y,label="Student Data",color='darkblue')
+plt.ylabel("Total Marks")
+plt.xlabel("Student Name")
+plt.title("Student Marks")
+plt.legend()
+
+students["Percentage"] = students["Total"] / 3
+students
+
+x = students["Name"]
+y = students["Percentage"]
+plt.bar(x,y,label="Student Data",color='grey')
+plt.ylabel("Percenages")
+plt.xlabel("Student Name")
+plt.title("Student Percentage")
+plt.legend()
+
+maleStudent = students.loc[students["Gender"] == "Male"]
+femaleStudent = students.loc[students["Gender"] == "Female"]
+x = maleStudent["Name"]
+y = maleStudent["Total"]
+x1 = femaleStudent["Name"]
+y1 = femaleStudent["Total"]
+plt.bar(x,y,label="Male Students", color='grey',width=0.5)
+plt.bar(x1,y1,label="Female Students", color='darkblue',width=0.5)
+plt.ylabel("Total Marks")
+plt.xlabel("Student Name")
+plt.title("Student Marks")
+plt.legend()
+
+x = students["Name"]
+y = students["Total"]
+plt.plot(x,y,'green')
+
+#Bar Graph
+
+import numpy as np
+x = np.arange(len(students["Name"]));
+width = 0.25
+# x = [0, 1, 2, 3, 4, 5] = x - 0.25 = 0 - 0.25
+daBar = plt.bar(x-width-0.05,students["DA"],width,label="DA",color="darkblue")
+projectBar = plt.bar(x,students["Project"],width,label="Project",color="grey")
+adbmsBar = plt.bar(x+width+0.05,students["ADBMS"],width,label="ADBMS",color="skyblue")
+plt.bar_label(daBar,padding=3)
+plt.bar_label(projectBar,padding=3)
+plt.bar_label(adbmsBar,padding=3)
+plt.legend(
+    title = 'Subjects', #title header inside legend
+    loc = 'upper right', #placement position upper right, center
+    fontsize = 10, #text font size
+    frameon = True, #show border size
+    facecolor = '#f8f9fa', #legend background color
+    edgecolor = 'gray', #legend border color
+    ncols = 3 #no of legned columns
+)
+plt.xlabel("Students")
+plt.ylabel("Marks")
+plt.title("DA vs Project marks")
+plt.xticks(x,students["Name"])
+plt.ylim(0,120)
+
+#Line Graph
+
+#Data
+months = ["January", "February", "March", "April", "May", "June", "July"]
+sales = [65, 72, 68, 85, 78, 92, 88]
+
+#find maximum and minimum sales
+maximum = max(sales) #92
+minimum = min(sales) #65
+
+#find the position of maximum and minimum sales
+index1 = sales.index(maximum) #5
+index2 = sales.index(minimum) #0
+
+#corresponding month
+max_month = months[index1] #june
+min_month = months[index2] #january
+
+#create line graph
+plt.plot(months, sales, marker='o', linestyle='-.', markersize=5, label="Sales", color='m', markerfacecolor='w', markeredgecolor="b")
+
+#highlight maximum and minimum point
+plt.scatter(max_month, maximum, s=100, label="Maximum", color="green", marker='o', alpha=0.5, edgecolors="k")
+plt.scatter(min_month, minimum, s=100, label="Minimum", color="blue", marker='o', alpha=0.5, edgecolors="k")
+
+#add title and labels
+plt.title("Employee Monthly Sales Performance")
+plt.xlabel("Month")
+plt.ylabel("Sales")
+
+#add grid and legend
+plt.grid(True)
+plt.legend()
+#plt.show()
+
+#print maximum and minimum information
+print("Maximum Sales:", maximum)
+print("Sales Month:", max_month)
+print("Minimum Sales:", minimum)
+print("Sales Month:", min_month)
+
+#properties
+
+| Value | Meaning         |
+| ----- | --------------- |
+| `'o'` | Circle          |
+| `'.'` | Point           |
+| `','` | Pixel           |
+| `'x'` | X               |
+| `'+'` | Plus            |
+| `'*'` | Star            |
+| `'s'` | Square          |
+| `'D'` | Diamond         |
+| `'d'` | Thin diamond    |
+| `'^'` | Up triangle     |
+| `'v'` | Down triangle   |
+| `'<'` | Left triangle   |
+| `'>'` | Right triangle  |
+| `'p'` | Pentagon        |
+| `'h'` | Hexagon         |
+| `'H'` | Hexagon         |
+| `'8'` | Octagon         |
+| `'_'` | Horizontal line |
+| `'|'` | Vertical line   |
+
+#Color code
+| Code  | Color   |
+| ----- | ------- |
+| `'r'` | Red     |
+| `'g'` | Green   |
+| `'b'` | Blue    |
+| `'k'` | Black   |
+| `'y'` | Yellow  |
+| `'m'` | Magenta |
+| `'c'` | Cyan    |
+| `'w'` | White   |
+
+#linestyle
+| Value    | Appearance |
+| -------- | ---------- |
+| `'-'`    | Solid      |
+| `'--'`   | Dashed     |
+| `'-.'`   | Dash-dot   |
+| `':'`    | Dotted     |
+| `'None'` | No line    |
+
+#Histogram
+
+#histogram of employee ages
+
+#take individual employee ages and range of ages
+emp_ages = [22,45,30,59,58,56,57,45,43,50,40,34,33,25,19]
+bins = [0,10,20,30,40,50,60]
+
+#create histogram of bar type
+plt.hist(emp_ages, bins, histtype='bar', rwidth=0.8, color='darkblue')  #histtype = barstacked,step,stepfilled
+
+#set labels
+plt.xlabel('Employee Ages')
+plt.ylabel('Number of Employees')
+plt.title('MY CORP')
+
+
+-----------------------------------------------------------------------------------------------------------------
+Emp Data Graph
+-----------------------------------------------------------------------------------------------------------------
+import matplotlib.pyplot as plt
+from pandas import Series,DataFrame,isna,notna
+
+#1.	Create a DataFrame using the dictionary.
+empdata = DataFrame ({
+    "empid": [1001, 1002, 1003, 1004, 1005, 1006],
+    "ename": ["Ganesh Rao", "Anil Kumar", "Gaurav Gupta", "Hema Chandra", "Laxmi Prasanna", "Anant Nag"],
+    "sal": [10000, 23000.50, 18000.33, 16500.50, 12000.75, 9999.99],
+    "doj": ["10-10-2000", "3-20-2002", "3-3-2002", "9-10-2000", "10-8 2000", "9-9-1999"],
+    "dep": ["Sales", "Sales", "Production", "Testing", "Testing", "Production"]
+})
+
+empdata
+
+#2. Retrieving first five Rows from DataFrame
+empdata[0:5]
+
+#3. Retrieve Column Names only.
+empdata[["ename"]]
+
+#4. Retrieving Sal and Doj column data from the dataframe.
+empdata[["sal","doj"]]
+
+#5. Find the employees who have the maximum and minimum salary.
+empdata["sal"].max()
+
+empdata["sal"].min()
+
+#6. Find all the employees whose salary is greater than the value given by the user.
+salary = int(input("Enter Salary of Employee: "))
+sal = empdata["sal"]
+empdata.loc[(sal > salary)]
+
+#7. Sort the data salary-wise.
+empdata.sort_values("sal")
+
+#8. Display department-wise employee count.
+empdata["dep"].value_counts()
+
+#9. Multiple Line Charts
+months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+product_A = [200, 250, 300, 280, 350, 400]
+product_B = [180, 220, 270, 320, 370, 390]
+
+#tasks
+#i.Plot both products on the same graph.
+#ii.Use different colors and markers.
+#iii.Add a legend.
+#iv.Add grid lines.
+#v.Identify which product performed better overall.
+
+plt.plot(months, product_A, marker='o', linestyle='-', markersize=5, label="ProductA", color='darkblue', markerfacecolor='w', markeredgecolor="r")
+plt.plot(months, product_B, marker='D', linestyle='-', markersize=5, label="ProductB", color='skyblue', markerfacecolor='w', markeredgecolor="r")
+
+#add title and labels
+plt.title("Monthly Product Performance")
+plt.xlabel("Month")
+plt.ylabel("Product")
+
+#add grid and legend
+plt.grid(True)
+plt.legend()
+
+#10. Horizontal Bar Chart
+
+# a. Dataset
+employees = ["John", "Emma", "David", "Sophia", "Michael"]
+tasks_completed = [45, 60, 38, 72, 55]
+
+# b. Task
+# i. Create a horizontal bar chart.
+# ii. Sort employees according to completed tasks.
+# iii. Highlight the most productive employee.
+# iv. Add chart title and labels.
+
+# Create DataFrame
+data = DataFrame({
+    "Employee": employees,
+    "Tasks": tasks_completed
+})
+
+# Sort employees according to completed tasks
+data = data.sort_values("Tasks")
+
+# Find the most productive employee
+max_tasks = data["Tasks"].max()
+
+# Highlight the most productive employee
+colors = []
+for task in data["Tasks"]:
+    if task == max_tasks:
+        colors.append("red")
+    else:
+        colors.append("skyblue")
+
+# Create horizontal bar chart
+plt.barh(data["Employee"], data["Tasks"], color=colors)
+
+# Add title and labels
+plt.title("Employee Task Completion")
+plt.xlabel("Tasks Completed")
+plt.ylabel("Employees")
+
+# Show chart
+plt.show()
+
+#Quarterly Revenue Analysis
+
+#Data
+quarters = ["Q1", "Q2", "Q3", "Q4"]
+
+#Take quarter revenue from the user
+revenue = []
+
+for q in quarters:
+    value = float(input("Enter revenue for " + q + ": "))
+    revenue.append(value)
+
+#Bar Graph
+
+x = quarters
+y = revenue
+
+bars = plt.bar(x, y, label="Quarterly Revenue", color="darkblue")
+
+#Add revenue values on top of bars
+plt.bar_label(bars, padding=3)
+
+#Format Y-axis with currency labels
+import matplotlib.ticker as ticker
+
+plt.gca().yaxis.set_major_formatter(
+    ticker.FuncFormatter(lambda x, p: '₹{:,.0f}'.format(x))
+)
+
+#Add title and labels
+plt.xlabel("Quarter")
+plt.ylabel("Revenue")
+plt.title("Quarterly Revenue Analysis")
+plt.legend()
+
+plt.show()
+
+
+#Determine quarter with maximum growth
+
+growth = []
+
+for i in range(1, len(revenue)):
+    growth.append(revenue[i] - revenue[i-1])
+
+maximum = max(growth)
+
+#Find position of maximum growth
+index = growth.index(maximum)
+
+#Corresponding quarter
+max_growth_quarter = quarters[index + 1]
+
+print("Maximum Growth:", maximum)
+print("Quarter with Maximum Growth:", max_growth_quarter)
+
+#12. Monthly Expense Tracker
+
+#Data
+categories = ["Rent", "Food", "Transport", "Utilities", "Entertainment"]
+expenses = [15000, 7000, 3000, 2500, 2000]
+
+#Find highest expense
+maximum = max(expenses)
+
+#Find position of maximum expense
+index = expenses.index(maximum)
+
+#Corresponding category
+max_category = categories[index]
+
+#Create horizontal bar chart
+bars = plt.barh(categories, expenses, color="darkblue")
+
+#Display expense amounts on bars
+plt.bar_label(bars, padding=3)
+
+#Add title and labels
+plt.xlabel("Expense Amount")
+plt.ylabel("Categories")
+plt.title("Monthly Expense Tracker")
+
+plt.show()
+
+#Calculate total monthly expenses
+total_expense = sum(expenses)
+
+#print highest expense category
+print("Highest Expense Category:", max_category)
+print("Highest Expense:", maximum)
+
+#print total monthly expenses
+print("Total Monthly Expenses:", total_expense)
+
+#13. All in One
+
+#Data
+cities = ["Delhi", "Mumbai", "Bangalore", "Chennai", "Kolkata"]
+
+population = [32, 21, 14, 11, 15]       # in millions
+rainfall = [800, 2400, 970, 1400, 1600] # in mm
+temperatures = [32, 33, 28, 31, 30]     # in °C
+
+
+#i. Bar Chart for Population
+
+x = cities
+y = population
+
+bars = plt.bar(x, y, label="Population", color="darkblue")
+
+#Display population values on bars
+plt.bar_label(bars, padding=3)
+
+plt.xlabel("Cities")
+plt.ylabel("Population (Millions)")
+plt.title("City-wise Population")
+plt.legend()
+
+plt.show()
+
+
+#ii. Line Chart for Rainfall
+
+x = cities
+y = rainfall
+
+plt.plot(x, y, marker='o', linestyle='-', markersize=5,
+         label="Rainfall", color='green',
+         markerfacecolor='w', markeredgecolor="b")
+
+plt.xlabel("Cities")
+plt.ylabel("Rainfall (mm)")
+plt.title("City-wise Rainfall")
+
+plt.grid(True)
+plt.legend()
+
+plt.show()
+
+
+#iii. Histogram for Temperatures
+
+plt.hist(temperatures, bins=5, histtype='bar',
+         rwidth=0.8, color='skyblue')
+
+plt.xlabel("Temperature (°C)")
+plt.ylabel("Number of Cities")
+plt.title("Temperature Distribution")
+
+plt.show()
+
+
+#iv. Compare climatic patterns among cities
+
+#Find maximum and minimum rainfall
+maximum_rainfall = max(rainfall)
+minimum_rainfall = min(rainfall)
+
+#Find position
+rain_max_index = rainfall.index(maximum_rainfall)
+rain_min_index = rainfall.index(minimum_rainfall)
+
+#Corresponding cities
+highest_rainfall_city = cities[rain_max_index]
+lowest_rainfall_city = cities[rain_min_index]
+
+
+#Find maximum and minimum temperature
+maximum_temp = max(temperatures)
+minimum_temp = min(temperatures)
+
+temp_max_index = temperatures.index(maximum_temp)
+temp_min_index = temperatures.index(minimum_temp)
+
+max_temp_city = cities[temp_max_index]
+min_temp_city = cities[temp_min_index]
+
+
+print("Highest Rainfall City:", highest_rainfall_city)
+print("Highest Rainfall:", maximum_rainfall, "mm")
+
+print("Lowest Rainfall City:", lowest_rainfall_city)
+print("Lowest Rainfall:", minimum_rainfall, "mm")
+
+print("Highest Temperature City:", max_temp_city)
+print("Highest Temperature:", maximum_temp, "°C")
+
+print("Lowest Temperature City:", min_temp_city)
+print("Lowest Temperature:", minimum_temp, "°C")
+
+
+#v. Brief Report
+
+print("\nBrief Report:")
+print("Delhi has the highest population among the given cities.")
+print("Mumbai receives the highest rainfall, while Delhi receives the lowest rainfall.")
+print("Mumbai has the highest temperature of 33°C.")
+print("Bangalore has the lowest temperature of 28°C.")
+print("Overall, Mumbai has a high rainfall pattern, while Delhi has a hotter and drier climate.")
+
+
+
+-----------------------------------------------------------------------------------------------------------------
+DataFrame Demo
+-----------------------------------------------------------------------------------------------------------------
+from pandas import Series,DataFrame,isna,notna
+
+students = DataFrame({
+    "Name" : ["Jay", "Karan", "Dipa", "Jinal", "Krupesh", "Monu"],
+    "Id" : [1,2,3,4,5,6],
+    "Gender" : ("Male", "Male", "Female", "Female", "Male", "Male"),
+    "DA" : (76,89,76,54,38,89),
+    "Project" : (56,78,93,78,76,90),
+    "ADBMS" : (78,87,56,88,64,89),
+    "Course" : ("MCA", "M.sc.IT", "MCA", "M.sc.IT", "M.sc.IT", "M.sc.IT")
+})
+
+#print
+students
+
+#shape give total rows and columns of the dataframe
+students.shape
+rows,cols = students.shape
+print(f"The student dataframe [{rows} * {cols}] ")
+
+#for the single column
+students["Gender"]
+
+students.Gender
+
+#multiple columns
+students[["Name", "Gender"]]
+
+print(type(students[["Name"]]))
+print(type(students.Name))
+
+students[students["Gender"] == "Male"]
+
+#user input
+gender = input("Enter the gender:")
+students[students["Gender"] == gender]
+
+gender = input("Enter the gender:")
+if gender in ["Male", "Female"]:
+    print(students[students["Gender"] == gender])
+else:
+    print("Invalid input")
+
+#shape gives rows, columns in the form of tuple
+#length gives only rows in the form of int
+print(len(students))
+students
+
+noOfRows = int(input("How many rows do you want?"))
+rowLen = len(students)
+if noOfRows > len(students):
+    print(f"The value of rows count should be less than {len(students)} ")
+else:
+    print(students[0:noOfRows])
+
+students[0::2]
+#students[::2]
+
+students[rows:0:-1]
+#what is the difference with the statement students[rows::-1]
+
+print(f'Maximum marks in DA = { students["DA"].max() }')
+print(f'Minimum marks in DA = { students["DA"].min() }')
+print(f'Manimum marks in DA = { students["Name"].max() }')
+
+daMaxMarks = students["DA"].max()
+students[students["DA"] == daMaxMarks]
+
+students[students["DA"] != daMaxMarks]
+
+#select id,name,gender,course from students where gender = "male"
+students[["Id", "Name", "Gender", "Course"]] [students["Gender"] == "Male"]
+
+students["Gender"] == "Male"
+
+#0=label
+print(students.loc[0])
+print(type(students.loc[0]))
+
+gender = "Female"
+students.loc[students["Gender"] == gender]
+
+#1st para - row_selection, 2nd para - column_selection
+students.loc[students["Gender"] == "Male", ["Id", "Name", "Gender"]]
+
+students.loc[(students["Gender"] == "Male") & (students["Course"] == "M.sc.IT")]
+
+students.loc[(students["DA"] > 75) & (students["Gender"] == "Female"), ["Id","Name","Gender"]]
+
+students.iloc[0,0]
+
+#0:2 - row
+#0 - column
+students.iloc[0:2, 0]
+
+print(f"Getting rows and columns using the slicing\n{students.iloc[0:2,0:2]}")
+print(f"Getting rows and columns using the index values\n{students.iloc[[0,1,5],[0,4]]}")
+
+students.sort_values("DA")
+
+students.sort_values("DA", ascending=False)
+
+students.sort_values(["DA","Name"], ascending=[False,False])
+
+#students["Total"] = students["DA"] + students["Project"] + students["ADBMS"]
+students["Total"] = students.loc[:, ["DA", "Project", "ADBMS"]].sum(axis=1)
+#students["Total"] = students[["DA","Project","ADBMS"]].sum(axis=1)
+students
+
+students["DA"].mean()
+
+students.loc[students["Gender"] == "Male", ["DA"]].mean()
+
+students.loc[students["Gender"] == "Male", ["DA"]].sum()
+
+students.loc[students["Gender"] == "Male", ["DA"]].max()
+
+students.loc[students["Gender"] == "Male", ["DA"]].min()
+
+students.groupby("Gender")["DA"].mean()
+
+students.groupby("Course")["Total"].max()
+
+students.loc[students["Total"].idxmax()]
+
+students["SGender"] = students["Gender"].apply(lambda gender: 1 if gender == "Male" else 0)
+students
+
+students["SGender"]
+
+students["PassFail"] = students.apply(lambda row: "Pass" if row["DA"] > 40 and row["Project"] > 40 and row["ADBMS"] > 40 else "Fail", axis=1)
+students
+
+def calculateGrade(rows):
+    if rows["PassFail"] == "Pass":
+        per = rows["Total"] / 3
+        if per > 80:
+            return "A"
+        elif per >=70 and per <= 80:
+            return "B"
+        elif per >=60 and per <= 70:
+            return "C"
+        elif per >=50 and per <= 60:
+            return "D"
+        else:
+            return "E"
+    else:
+        return "F"
+
+students["Grade"] = students.apply(calculateGrade, axis=1)
+students
+
+students["Per"] = students.apply(lambda row: row["Total"] / 3 if row["PassFail"] == "Pass" else "NA", axis=1)
+students
+
+students["Per"] = students.apply(lambda row: row["Total"] / 3 if row["PassFai"] == "F" else "NA", axis=1)
+students
+
+
+
+-----------------------------------------------------------------------------------------------------------------
+Assignment - 3
+-----------------------------------------------------------------------------------------------------------------
+# 1. Predict disease progression using Multiple Linear Regression
+
+from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+
+# Load dataset
+data = load_diabetes()
+
+# Input features and target
+X = data.data
+y = data.target
+
+# Display dataset information
+print("Dataset Shape:", X.shape)
+print("Feature Names:", data.feature_names)
+
+# Split dataset into training and testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Create Linear Regression model
+model = LinearRegression()
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Predict disease progression
+y_pred = model.predict(X_test)
+
+# Display predictions
+print("\nActual Values:")
+print(y_test[:10])
+
+print("\nPredicted Values:")
+print(y_pred[:10])
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print("\nMean Squared Error:", mse)
+print("R2 Score:", r2)
+
+# 2. Classify breast tumour as benign or malignant
+# Using Logistic Regression
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Load dataset
+data = load_breast_cancer()
+
+# Input features and target
+X = data.data
+y = data.target
+
+# Display dataset information
+print("Dataset Shape:", X.shape)
+print("Feature Names:")
+print(data.feature_names)
+
+print("\nTarget Names:")
+print(data.target_names)
+
+# Split dataset into training and testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Create Logistic Regression model
+model = LogisticRegression(max_iter=10000)
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Predict tumour class
+y_pred = model.predict(X_test)
+
+# Display actual and predicted values
+print("\nActual Values:")
+print(y_test[:10])
+
+print("\nPredicted Values:")
+print(y_pred[:10])
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy)
+
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=data.target_names))
+
+-----------------------------------------------------------------------------------------------------------------
+Assignment - 4
+-----------------------------------------------------------------------------------------------------------------
+# 1. Classify Iris Flowers using Decision Tree
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Load Iris dataset
+data = load_iris()
+
+# Input features and target
+X = data.data
+y = data.target
+
+# Display dataset information
+print("Dataset Shape:", X.shape)
+print("\nFeature Names:")
+print(data.feature_names)
+
+print("\nTarget Names:")
+print(data.target_names)
+
+# Split dataset into training and testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Create Decision Tree model
+model = DecisionTreeClassifier(random_state=42)
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Predict flower species
+y_pred = model.predict(X_test)
+
+# Display actual and predicted values
+print("\nActual Values:")
+print(y_test)
+
+print("\nPredicted Values:")
+print(y_pred)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy)
+
+# Confusion Matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# Classification Report
+print("\nClassification Report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=data.target_names
+))
+
+# 2. Classify Iris Flowers using KNN
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.preprocessing import StandardScaler
+
+# Load Iris dataset
+data = load_iris()
+
+# Input features and target
+X = data.data
+y = data.target
+
+# Display dataset information
+print("Dataset Shape:", X.shape)
+
+print("\nFeature Names:")
+print(data.feature_names)
+
+print("\nTarget Names:")
+print(data.target_names)
+
+# Split dataset into training and testing data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Scale the features
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Create KNN model
+# k = 5
+model = KNeighborsClassifier(n_neighbors=5)
+
+# Train the model
+model.fit(X_train, y_train)
+
+# Predict flower species
+y_pred = model.predict(X_test)
+
+# Display actual and predicted values
+print("\nActual Values:")
+print(y_test)
+
+print("\nPredicted Values:")
+print(y_pred)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", accuracy)
+
+# Confusion Matrix
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# Classification Report
+print("\nClassification Report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    target_names=data.target_names
+))
+
+
+
